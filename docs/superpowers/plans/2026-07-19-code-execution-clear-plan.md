@@ -329,8 +329,10 @@ Supports lab types via same payload:
 
 ## 13. Next action
 
-Implement **Phase 1** using the ship plan task checklist:
+Implement **Phase 1** with subagents (recommended):
+
+→ **[2026-07-19-code-execution-subagent-impl.md](./2026-07-19-code-execution-subagent-impl.md)** — 10 tasks, dispatch order, acceptance per task  
+
+Code samples / longer steps:
 
 → [2026-07-19-piston-code-execution-ship.md](./2026-07-19-piston-code-execution-ship.md)
-
-Execution options: subagent-per-task or inline session implementation.
