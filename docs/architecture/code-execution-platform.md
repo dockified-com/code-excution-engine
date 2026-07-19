@@ -102,7 +102,57 @@ sequenceDiagram
 | Piston private | Public Piston = open CPU abuse |
 | API keys per client | Meter, revoke, isolate tutor vs LMS |
 
+## Internal service design (SRP + use cases)
+
+Inside Nest, prefer **use-case pattern** over a single fat service:
+
+```mermaid
+flowchart TB
+  subgraph presentation [Presentation]
+    C[ExecutionController]
+    G[ApiKeyGuard]
+    D[DTOs]
+  end
+
+  subgraph application [Application]
+    UC1[ExecuteCodeUseCase]
+    UC2[ListRuntimesUseCase]
+    Port[CodeRunnerPort]
+  end
+
+  subgraph domain [Domain]
+    J[Judge]
+    V[VisibilityFilter]
+    L[LanguagePolicy]
+  end
+
+  subgraph infra [Infrastructure]
+    P[PistonClient]
+  end
+
+  C --> UC1
+  C --> UC2
+  G --> C
+  UC1 --> J
+  UC1 --> V
+  UC1 --> L
+  UC1 --> Port
+  UC2 --> Port
+  UC2 --> L
+  P -.->|implements| Port
+```
+
+| Principle | Practice |
+|-----------|----------|
+| Single responsibility | One class → one reason to change |
+| Use case | One application class per user intention (`ExecuteCode`, `ListRuntimes`) |
+| Ports & adapters | Domain/use cases never import Piston HTTP details |
+| Thin controllers | Map DTO → use case input; return use case output |
+
+See design spec §3.3 for folder layout and class contracts.
+
 ## Related docs
 
 - [Full design spec](../superpowers/specs/2026-07-19-piston-code-execution-design.md)
+- [Clear plan](../superpowers/plans/2026-07-19-code-execution-clear-plan.md)
 - [Dockified Code Lab requirements](../requirements/code-lab-requirements.md) (summary alignment)

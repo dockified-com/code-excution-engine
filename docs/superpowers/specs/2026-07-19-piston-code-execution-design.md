@@ -93,33 +93,164 @@ Students submit untrusted code. Raw sandbox access must never be public. Grading
 | **Nest Judge Gateway** | Validate API key, rate limit, validate payload, orchestrate runs, compare outputs, sanitize, log |
 | **Piston** | Isolated compile/run; return stdout/stderr/exit/signal/timings |
 
-### 3.3 Nest module layout (target)
+### 3.3 Internal architecture: SRP + use-case pattern
 
+The Nest service is layered so **each class has one reason to change**. Controllers do not contain business rules. Infrastructure (Piston HTTP) does not contain grading rules. Application logic lives in **use cases**.
+
+```text
+HTTP request
+    │
+    ▼
+┌─────────────────────────────────────┐
+│ Presentation                        │
+│  Controllers · Guards · DTOs        │  map HTTP ↔ application input/output
+└─────────────────┬───────────────────┘
+                  ▼
+┌─────────────────────────────────────┐
+│ Application (use cases)             │
+│  one class = one user intention     │
+│  ExecuteCodeUseCase                 │
+│  ListRuntimesUseCase                │
+│  (later: EnqueueSubmissionUseCase)  │
+└─────────────────┬───────────────────┘
+                  ▼
+┌─────────────────────────────────────┐
+│ Domain (pure rules)                 │
+│  Judge / compare stdout              │
+│  Visibility filter                  │
+│  Language allowlist                 │
+│  Types / result models              │
+└─────────────────┬───────────────────┘
+                  ▼
+┌─────────────────────────────────────┐
+│ Infrastructure                      │
+│  PistonClient (port adapter)        │
+│  Config / env                       │
+│  Logging                            │
+└─────────────────────────────────────┘
 ```
+
+#### Single responsibility map
+
+| Unit | Responsibility (only) | Must not do |
+|------|------------------------|-------------|
+| `ExecutionController` | HTTP: route, parse body, return status | Judge, call Piston, filter hidden |
+| `ApiKeyGuard` | Authenticate API key | Business logic |
+| `ExecuteCodeUseCase` | Orchestrate one execute request end-to-end | HTTP details, raw fetch URL strings |
+| `ListRuntimesUseCase` | Return allowlisted runtimes | Execute code |
+| `Judge` (domain) | Normalize stdout, compare, build summary | HTTP, Piston |
+| `VisibilityFilter` (domain) | Strip fields for hidden tests | Run code |
+| `LanguagePolicy` (domain) | Allowlist / alias map (JS v1) | I/O |
+| `PistonClient` | Transport to Piston API | Compare expected vs actual |
+| `HealthController` | Liveness | Auth, execute |
+
+#### Use cases (v1)
+
+| Use case | Input | Output | Collaborators |
+|----------|-------|--------|----------------|
+| **ExecuteCodeUseCase** | language, files, tests?, mode, limits, context | `ExecuteResult` (runId, summary, tests, run?) | LanguagePolicy, PistonClient, Judge, VisibilityFilter |
+| **ListRuntimesUseCase** | (none) | filtered runtime list | PistonClient, LanguagePolicy |
+
+**Rule:** new product behavior = **new use case** (or extend domain helpers), not a fatter controller or fatter Piston client.
+
+#### Nest folder layout (target)
+
+```text
 src/
   main.ts
   app.module.ts
-  auth/
-    api-key.guard.ts
-    api-key.module.ts
-  execution/
-    execution.module.ts
-    execution.controller.ts      # POST /v1/execute
-    execution.service.ts         # orchestration
-    judge.service.ts             # compare + summary
-    response-filter.service.ts   # public vs hidden
-    dto/
-  piston/
-    piston.module.ts
-    piston.client.ts             # HTTP client to PISTON_URL
-    piston.types.ts
-  limits/
-    rate-limit (per key)
+  config/
+    env.ts
+  presentation/                    # or keep thin modules by feature
+    http/
+      execution.controller.ts      # POST /v1/execute, GET /v1/runtimes
+      health.controller.ts
+      dto/
+        execute.dto.ts
+    auth/
+      api-key.guard.ts
+      auth.module.ts
+  application/
+    use-cases/
+      execute-code.use-case.ts
+      list-runtimes.use-case.ts
+    ports/
+      code-runner.port.ts          # interface: run(job) → RunResult
+  domain/
+    judge.ts                       # pure or injectable with no I/O
+    visibility-filter.ts
+    language-policy.ts
+    models/
+      execute.models.ts
+  infrastructure/
+    piston/
+      piston.client.ts             # implements CodeRunnerPort
+      piston.mapper.ts             # Piston JSON ↔ domain RunResult
+      piston.module.ts
+  execution/                       # Nest module wiring only
+    execution.module.ts            # binds controller + use cases + port
   health/
-    health.controller.ts         # liveness; optional Piston probe
+    health.module.ts
+```
+
+Equivalent feature-sliced layout is acceptable if layers stay clear:
+
+```text
+src/execution/
+  presentation/execution.controller.ts
+  application/execute-code.use-case.ts
+  domain/judge.ts
+  ...
+```
+
+#### Dependency rule
+
+```text
+presentation → application → domain
+                application → ports (interfaces)
+infrastructure → implements ports
+```
+
+- Domain has **zero** Nest HTTP and **zero** `fetch` to Piston.  
+- Use cases depend on **`CodeRunnerPort`**, not on `PistonClient` class name (wire in module).  
+- Swapping Piston for another runner later = new adapter, same use cases.
+
+#### Example use-case shape (contract)
+
+```typescript
+// application/use-cases/execute-code.use-case.ts
+export class ExecuteCodeUseCase {
+  constructor(
+    private readonly runner: CodeRunnerPort,
+    private readonly judge: Judge,
+    private readonly visibility: VisibilityFilter,
+    private readonly languages: LanguagePolicy,
+  ) {}
+
+  async execute(input: ExecuteCodeInput): Promise<ExecuteResult> {
+    // 1. validate language via LanguagePolicy
+    // 2. branch mode run | judge
+    // 3. call runner per test / once
+    // 4. judge.compare + buildSummary
+    // 5. visibility.filter
+    // 6. return ExecuteResult
+  }
+}
+```
+
+Controller:
+
+```typescript
+@Post('execute')
+@UseGuards(ApiKeyGuard)
+execute(@Body() dto: ExecuteDto) {
+  return this.executeCodeUseCase.execute(mapDtoToInput(dto));
+}
 ```
 
 ---
+
+
 
 ## 4. Piston installation (Docker)
 

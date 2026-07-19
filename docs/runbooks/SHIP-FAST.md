@@ -88,6 +88,22 @@ curl -X POST http://localhost:3000/v1/execute \
 | Language v1 | JavaScript |
 | Auth | Bearer API key |
 | Compare | Exact stdout (newline-normalized) |
+| Structure | **SRP + use cases** (not a fat service) |
+
+### Inside Nest (required shape)
+
+```text
+Controller → ExecuteCodeUseCase / ListRuntimesUseCase
+                → domain Judge, VisibilityFilter, LanguagePolicy
+                → CodeRunnerPort ← PistonClient
+```
+
+| Class | One job only |
+|-------|----------------|
+| Controller | HTTP |
+| Use case | One user intention |
+| Judge | Compare / summary |
+| PistonClient | Talk to Piston |
 
 ## Do not distract yourself
 

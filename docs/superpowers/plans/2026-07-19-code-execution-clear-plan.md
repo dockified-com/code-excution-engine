@@ -207,20 +207,66 @@ flowchart LR
 
 ---
 
-## 9. Module layout (Nest)
+## 9. Internal design: SRP + use-case pattern
+
+Each class has **one responsibility**. Controllers stay thin; business flow lives in **use cases**; pure rules live in **domain**; Piston is an **adapter**.
+
+```text
+Presentation (HTTP, Guard, DTO)
+        ↓
+Application use cases  ← one intention per class
+        ↓
+Domain (Judge, VisibilityFilter, LanguagePolicy)
+        ↓
+Ports (CodeRunnerPort)  ←  Infrastructure (PistonClient)
+```
+
+| Unit | Single responsibility |
+|------|------------------------|
+| `ExecutionController` | HTTP only |
+| `ApiKeyGuard` | API key auth only |
+| `ExecuteCodeUseCase` | Orchestrate run/judge for one request |
+| `ListRuntimesUseCase` | List allowlisted runtimes |
+| `Judge` | Compare stdout + summary |
+| `VisibilityFilter` | Strip hidden test I/O |
+| `LanguagePolicy` | JS allowlist / aliases |
+| `PistonClient` | HTTP to Piston only (implements `CodeRunnerPort`) |
+
+### Use cases (v1)
+
+| Use case | Endpoint |
+|----------|----------|
+| `ExecuteCodeUseCase` | `POST /v1/execute` |
+| `ListRuntimesUseCase` | `GET /v1/runtimes` |
+
+New behavior → **new use case**, not a god `ExecutionService`.
+
+### Folder layout
 
 ```text
 src/
-  auth/           ApiKeyGuard
-  config/         env helpers
-  piston/         PistonClient
-  execution/      DTO, Judge, Filter, ExecutionService, Controller
-  health/         GET /health
-  main.ts
-  app.module.ts
+  presentation/http/     controllers, dto
+  presentation/auth/     ApiKeyGuard
+  application/use-cases/ ExecuteCodeUseCase, ListRuntimesUseCase
+  application/ports/     CodeRunnerPort
+  domain/                Judge, VisibilityFilter, LanguagePolicy, models
+  infrastructure/piston/ PistonClient + mapper
+  config/                env
+  health/                GET /health
+  execution/             Nest module wiring (providers bind port → Piston)
 ```
 
+### Dependency rule
+
+- Domain: no HTTP, no Piston  
+- Use cases: depend on port + domain only  
+- Infrastructure: implements port  
+- Easy later swap (queue worker calls same use case)
+
+Full detail: [design §3.3](../specs/2026-07-19-piston-code-execution-design.md)
+
 ---
+
 
 ## 10. Client contract (product backends)
 

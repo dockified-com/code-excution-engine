@@ -21,6 +21,16 @@
 - Prefer small files; module layout under `src/execution`, `src/piston`, `src/auth`, `src/health`
 - Tests: unit first for judge + filter; mock Piston client; one manual smoke with real Piston
 
+## Architecture constraint (all tasks)
+
+Use **single responsibility + use-case pattern** (see design §3.3 and clear plan §9):
+
+- Controllers: HTTP only  
+- **Use cases**: `ExecuteCodeUseCase`, `ListRuntimesUseCase` (orchestration)  
+- **Domain**: `Judge`, `VisibilityFilter`, `LanguagePolicy` (no I/O)  
+- **Port**: `CodeRunnerPort` ← implemented by `PistonClient`  
+- Do **not** put judge logic in the controller or Piston client  
+
 ## File map (create / modify)
 
 | Path | Responsibility |
@@ -29,22 +39,29 @@
 | `.env.example` | `PORT`, `PISTON_URL`, `API_KEYS`, limits |
 | `src/main.ts` | Bootstrap, global validation pipe |
 | `src/app.module.ts` | Import feature modules |
-| `src/auth/api-key.guard.ts` | Bearer key check |
-| `src/auth/auth.module.ts` | Guard provider |
-| `src/piston/piston.types.ts` | Piston request/response types |
-| `src/piston/piston.client.ts` | HTTP client to Piston |
-| `src/piston/piston.module.ts` | Export client |
-| `src/execution/dto/execute.dto.ts` | Request DTO |
-| `src/execution/judge.service.ts` | Normalize + compare + summary |
-| `src/execution/response-filter.service.ts` | Strip hidden I/O |
-| `src/execution/execution.service.ts` | Orchestrate run/judge |
-| `src/execution/execution.controller.ts` | `POST /v1/execute`, `GET /v1/runtimes` |
-| `src/execution/execution.module.ts` | Wire execution |
-| `src/health/health.controller.ts` | `GET /health` |
-| `src/health/health.module.ts` | Health module |
-| Unit specs next to services | Judge, filter, guard |
+| `src/config/env.ts` | Env helpers |
+| `src/presentation/auth/api-key.guard.ts` | Bearer key check |
+| `src/presentation/auth/auth.module.ts` | Guard provider |
+| `src/presentation/http/dto/execute.dto.ts` | Request DTO |
+| `src/presentation/http/execution.controller.ts` | HTTP routes only |
+| `src/presentation/http/health.controller.ts` | `GET /health` |
+| `src/application/ports/code-runner.port.ts` | Runner interface |
+| `src/application/use-cases/execute-code.use-case.ts` | Run + judge orchestration |
+| `src/application/use-cases/list-runtimes.use-case.ts` | List allowlisted runtimes |
+| `src/domain/judge.ts` | Normalize + compare + summary |
+| `src/domain/visibility-filter.ts` | Strip hidden I/O |
+| `src/domain/language-policy.ts` | JS allowlist / aliases |
+| `src/domain/models/execute.models.ts` | Domain types |
+| `src/infrastructure/piston/piston.client.ts` | Implements `CodeRunnerPort` |
+| `src/infrastructure/piston/piston.types.ts` | Piston wire types |
+| `src/infrastructure/piston/piston.module.ts` | Bind port → client |
+| `src/execution/execution.module.ts` | Wire presentation + use cases + domain |
+| Unit specs next to domain / use cases | Judge, filter, use case, guard |
+
+> Path aliases: if the team prefers `src/execution/{domain,application,...}` feature folders, keep the **same layer boundaries**; do not collapse into one god service.
 
 ---
+
 
 ### Task 1: Docker Compose + env for private Piston
 
