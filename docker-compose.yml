@@ -16,8 +16,6 @@ services:
       retries: 10
       start_period: 20s
 
-  # Nest Dockerfile lands in a later task. Until then, run Nest on the host with
-  # PISTON_URL=http://127.0.0.1:2000. This service is a stub for compose wiring.
   api:
     build: .
     ports:
@@ -30,8 +28,6 @@ services:
       piston:
         condition: service_started
     restart: unless-stopped
-    profiles:
-      - full
 
 volumes:
   piston-data:
