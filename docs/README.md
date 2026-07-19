@@ -2,7 +2,8 @@
 
 | Path | Description |
 |------|-------------|
-| [runbooks/SHIP-FAST.md](./runbooks/SHIP-FAST.md) | **Start here to ship** — MVP checklist |
+| [superpowers/plans/2026-07-19-code-execution-clear-plan.md](./superpowers/plans/2026-07-19-code-execution-clear-plan.md) | **Clear master plan** — architecture, endpoints, phases |
+| [runbooks/SHIP-FAST.md](./runbooks/SHIP-FAST.md) | MVP checklist to ship fast |
 | [superpowers/plans/2026-07-19-piston-code-execution-ship.md](./superpowers/plans/2026-07-19-piston-code-execution-ship.md) | Task-by-task implementation plan |
 | [architecture/code-execution-platform.md](./architecture/code-execution-platform.md) | Diagrams and high-level system context |
 | [superpowers/specs/2026-07-19-piston-code-execution-design.md](./superpowers/specs/2026-07-19-piston-code-execution-design.md) | Full design spec (Piston + Nest judge API) |
