@@ -4,6 +4,7 @@
 |------|-------------|
 | [superpowers/plans/2026-07-19-code-execution-clear-plan.md](./superpowers/plans/2026-07-19-code-execution-clear-plan.md) | **Clear master plan** — architecture, endpoints, phases |
 | [superpowers/plans/2026-07-19-code-execution-subagent-impl.md](./superpowers/plans/2026-07-19-code-execution-subagent-impl.md) | **Subagent implementation plan** — 10 tasks, dispatch order |
+| [runbooks/client-integration.md](./runbooks/client-integration.md) | **Client integration** — auth, execute run/judge, visibility, endpoints |
 | [runbooks/SHIP-FAST.md](./runbooks/SHIP-FAST.md) | MVP checklist to ship fast |
 | [superpowers/plans/2026-07-19-piston-code-execution-ship.md](./superpowers/plans/2026-07-19-piston-code-execution-ship.md) | Detailed ship steps (code samples) |
 | [architecture/code-execution-platform.md](./architecture/code-execution-platform.md) | Diagrams and high-level system context |
