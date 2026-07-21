@@ -8,6 +8,7 @@
 | [runbooks/SHIP-FAST.md](./runbooks/SHIP-FAST.md) | MVP checklist to ship fast |
 | [superpowers/plans/2026-07-19-piston-code-execution-ship.md](./superpowers/plans/2026-07-19-piston-code-execution-ship.md) | Detailed ship steps (code samples) |
 | [architecture/code-execution-platform.md](./architecture/code-execution-platform.md) | Diagrams and high-level system context |
+| [architecture/data-storage.md](./architecture/data-storage.md) | **DB / cache policy** — when storage is needed (MVP: none) |
 | [superpowers/specs/2026-07-19-piston-code-execution-design.md](./superpowers/specs/2026-07-19-piston-code-execution-design.md) | Full design spec (Piston + Nest judge API) |
 | [requirements/code-lab-requirements.md](./requirements/code-lab-requirements.md) | Code lab requirements aligned to backend |
 

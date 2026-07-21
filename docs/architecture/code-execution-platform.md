@@ -14,6 +14,8 @@ Shared, production code-execution and judging service used by multiple products:
 
 This service sits **in front of Piston**. Product backends never expose Piston to browsers or partners.
 
+**Data store:** Phase 1 execute/judge is **stateless** (no product DB or Redis required). See [data-storage.md](./data-storage.md) for when to add keys DB, quotas, or queues.
+
 ## System context
 
 ```mermaid

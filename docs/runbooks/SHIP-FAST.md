@@ -111,6 +111,7 @@ Controller → ExecuteCodeUseCase / ListRuntimesUseCase
 - Do not expose Piston `:2000` publicly  
 - Do not build LMS features in this service  
 - Do not install every Piston language  
+- Do not add Postgres/Redis “for cache” on MVP — execute/judge is stateless (see [../architecture/data-storage.md](../architecture/data-storage.md))
 
 ## After MVP
 
