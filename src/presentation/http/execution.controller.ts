@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import {
   ExecuteCodeUseCase,
   type ExecuteCodeInput,
 } from '../../application/use-cases/execute-code.use-case';
@@ -7,6 +13,8 @@ import { ListRuntimesUseCase } from '../../application/use-cases/list-runtimes.u
 import { ApiKeyGuard } from '../auth/api-key.guard';
 import { ExecuteDto } from './dto/execute.dto';
 
+@ApiTags('execution')
+@ApiBearerAuth('api-key')
 @Controller('v1')
 @UseGuards(ApiKeyGuard)
 export class ExecutionController {
@@ -16,11 +24,22 @@ export class ExecutionController {
   ) {}
 
   @Post('execute')
+  @ApiOperation({
+    summary: 'Run or judge student code',
+    description:
+      'mode=run: one sandbox run. mode=judge (or tests present): run each test, compare stdout, filter hidden details.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid API key' })
   execute(@Body() body: ExecuteDto) {
     return this.executeCode.execute(mapDtoToInput(body));
   }
 
   @Get('runtimes')
+  @ApiOperation({
+    summary: 'List allowlisted runtimes',
+    description: 'v1 returns JavaScript only (policy-filtered).',
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid API key' })
   runtimes() {
     return this.listRuntimes.execute();
   }
