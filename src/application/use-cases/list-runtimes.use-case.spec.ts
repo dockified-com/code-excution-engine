@@ -11,9 +11,9 @@ describe('ListRuntimesUseCase', () => {
         aliases: ['node-javascript', 'js', 'node'],
       },
       {
-        language: 'python',
-        version: '3.12.0',
-        aliases: ['py'],
+        language: 'ruby',
+        version: '3.2.0',
+        aliases: ['rb'],
       },
       {
         language: 'typescript',
@@ -49,9 +49,9 @@ describe('ListRuntimesUseCase', () => {
         aliases: ['js'],
       },
       {
-        language: 'c',
+        language: 'ruby',
         version: '10',
-        aliases: ['gcc'],
+        aliases: ['rb'],
       },
     ];
 
@@ -76,7 +76,9 @@ describe('ListRuntimesUseCase', () => {
   it('returns empty array when no allowlisted runtimes', async () => {
     const listRuntimes = jest
       .fn()
-      .mockResolvedValue([{ language: 'ruby', version: '3', aliases: ['rb'] }]);
+      .mockResolvedValue([
+        { language: 'ruby', version: '3', aliases: ['rb'] },
+      ]);
     const runner: CodeRunnerPort = {
       run: jest.fn(),
       listRuntimes,
