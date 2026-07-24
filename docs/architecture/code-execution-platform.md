@@ -16,6 +16,8 @@ This service sits **in front of Piston**. Product backends never expose Piston t
 
 **Data store:** Phase 1 execute/judge is **stateless** (no product DB or Redis required). See [data-storage.md](./data-storage.md) for when to add keys DB, quotas, or queues.
 
+**Docs:** [Getting started](../tutorials/getting-started.md) · [Why this gateway](../explanation/why-judge-gateway.md) · [Execute API reference](../reference/execute-api.md) · [Docs index](../README.md)
+
 ## System context
 
 ```mermaid
