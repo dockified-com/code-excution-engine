@@ -45,4 +45,14 @@ describe('LanguageRegistry', () => {
       expect(registry.listIds()).toContain('javascript');
     });
   });
+
+  describe('python pack', () => {
+    it('resolves python aliases', () => {
+      expect(registry.resolve('python')?.id).toBe('python');
+      expect(registry.resolve('python3')?.pistonLanguage).toBe('python');
+      expect(registry.resolve('py')?.defaultFileName).toBe('main.py');
+      expect(registry.resolve('py')?.hasCompileStage).toBe(false);
+    });
+  });
+
 });
