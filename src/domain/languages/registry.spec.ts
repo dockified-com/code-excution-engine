@@ -86,5 +86,4 @@ describe('LanguageRegistry', () => {
       expect(registry.resolve('sql')?.hasCompileStage).toBe(false);
     });
   });
-
 });

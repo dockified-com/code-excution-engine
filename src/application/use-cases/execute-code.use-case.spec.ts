@@ -434,7 +434,6 @@ describe('ExecuteCodeUseCase', () => {
     );
   });
 
-<<<<<<< HEAD
   it('runs python via piston language python', async () => {
     const run = jest.fn().mockResolvedValue({
       language: 'python',
@@ -459,7 +458,6 @@ describe('ExecuteCodeUseCase', () => {
     );
     expect(res.summary.success).toBe(true);
   });
-
 
   it('runs c via piston language c with default main.c', async () => {
     const run = jest.fn().mockResolvedValue({
@@ -547,9 +545,6 @@ describe('ExecuteCodeUseCase', () => {
     );
   });
 
-
-=======
->>>>>>> feature/lang-sql
   it('runs sql via sqlite3', async () => {
     const run = jest.fn().mockResolvedValue({
       language: 'sqlite3',
@@ -582,6 +577,4 @@ describe('ExecuteCodeUseCase', () => {
       }),
     );
   });
-
 });
-

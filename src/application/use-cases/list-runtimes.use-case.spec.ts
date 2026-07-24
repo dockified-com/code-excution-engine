@@ -76,9 +76,7 @@ describe('ListRuntimesUseCase', () => {
   it('returns empty array when no allowlisted runtimes', async () => {
     const listRuntimes = jest
       .fn()
-      .mockResolvedValue([
-        { language: 'ruby', version: '3', aliases: ['rb'] },
-      ]);
+      .mockResolvedValue([{ language: 'ruby', version: '3', aliases: ['rb'] }]);
     const runner: CodeRunnerPort = {
       run: jest.fn(),
       listRuntimes,
