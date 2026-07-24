@@ -78,6 +78,7 @@ Students never call Piston or hold platform API keys.
 | Path | Description |
 |------|-------------|
 | [runbooks/client-integration.md](./runbooks/client-integration.md) | Auth, examples, checklist |
+| [runbooks/piston-languages.md](./runbooks/piston-languages.md) | Install JS/Python/C/C++/SQL packages on Piston |
 | [runbooks/SHIP-FAST.md](./runbooks/SHIP-FAST.md) | MVP ship checklist |
 
 ## Design specs & plans (superpowers)

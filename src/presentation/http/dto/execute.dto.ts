@@ -100,7 +100,7 @@ export class ExecuteDto {
   @ApiProperty({
     example: 'javascript',
     description:
-      'Language id or alias. Core: javascript (js, node). Additional languages are registered via LanguageRegistry packs (python, c, cpp, sql). Unregistered ids return 400. See GET /v1/runtimes.',
+      'Language id or alias. Supported: javascript (js, node), python (python3, py), c, cpp (c++, cxx), sql (sqlite, sqlite3). See GET /v1/runtimes for installed engines.',
   })
   @IsString()
   language!: string;
