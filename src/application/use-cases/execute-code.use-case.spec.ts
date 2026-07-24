@@ -433,4 +433,31 @@ describe('ExecuteCodeUseCase', () => {
       expect.objectContaining({ runTimeoutMs: 2000 }),
     );
   });
+
+  it('runs python via piston language python', async () => {
+    const run = jest.fn().mockResolvedValue({
+      language: 'python',
+      version: '3.12.0',
+      stdout: '1\n',
+      stderr: '',
+      code: 0,
+      signal: null,
+      engineStatus: null,
+    });
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    const res = await uc.execute({
+      language: 'py',
+      mode: 'run',
+      files: [{ content: 'print(1)' }],
+    });
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: 'python',
+        files: [{ name: 'main.py', content: 'print(1)' }],
+      }),
+    );
+    expect(res.summary.success).toBe(true);
+  });
+
 });
+
