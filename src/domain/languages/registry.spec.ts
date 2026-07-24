@@ -45,4 +45,17 @@ describe('LanguageRegistry', () => {
       expect(registry.listIds()).toContain('javascript');
     });
   });
+
+  describe('c-cpp pack', () => {
+    it('resolves c and cpp', () => {
+      expect(registry.resolve('c')?.pistonLanguage).toBe('c');
+      expect(registry.resolve('c')?.defaultFileName).toBe('main.c');
+      expect(registry.resolve('c')?.hasCompileStage).toBe(true);
+      expect(registry.resolve('c++')?.id).toBe('cpp');
+      expect(registry.resolve('cxx')?.defaultFileName).toBe('main.cpp');
+      expect(registry.resolve('cpp')?.pistonLanguage).toBe('c++');
+      expect(registry.resolve('cpp')?.hasCompileStage).toBe(true);
+    });
+  });
+
 });

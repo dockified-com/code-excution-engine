@@ -433,4 +433,91 @@ describe('ExecuteCodeUseCase', () => {
       expect.objectContaining({ runTimeoutMs: 2000 }),
     );
   });
+
+  it('runs c via piston language c with default main.c', async () => {
+    const run = jest.fn().mockResolvedValue({
+      language: 'c',
+      version: '10.2.0',
+      stdout: '0\n',
+      stderr: '',
+      code: 0,
+      signal: null,
+      engineStatus: null,
+    });
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    await uc.execute({
+      language: 'c',
+      mode: 'run',
+      files: [{ content: 'int main(){return 0;}' }],
+    });
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: 'c',
+        files: [{ name: 'main.c', content: 'int main(){return 0;}' }],
+      }),
+    );
+  });
+
+  it('judge mode records compile_error for c and strips hidden I/O', async () => {
+    const compileFail = {
+      language: 'c',
+      version: '10.2.0',
+      stdout: '',
+      stderr: '',
+      code: null,
+      signal: null,
+      engineStatus: null,
+      compile: {
+        stdout: '',
+        stderr: 'error: syntax',
+        code: 1,
+        signal: null,
+        engineStatus: null,
+      },
+    };
+    const run = jest
+      .fn()
+      .mockResolvedValueOnce(compileFail)
+      .mockResolvedValueOnce(compileFail);
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    const res = await uc.execute({
+      language: 'c',
+      files: [{ content: 'int main(){' }],
+      tests: [
+        { id: 't1', expectedStdout: '0', visibility: 'public' },
+        { id: 't2', expectedStdout: '0', visibility: 'hidden' },
+      ],
+    });
+    expect(res.summary.status).toBe('compile_error');
+    expect(res.tests[0].status).toBe('compile_error');
+    expect(res.tests[0].stderr).toContain('error: syntax');
+    expect(res.tests[1].status).toBe('compile_error');
+    expect(res.tests[1].stderr).toBeUndefined();
+    expect(run).toHaveBeenCalledTimes(2);
+  });
+
+  it('resolves cpp alias c++ to piston c++', async () => {
+    const run = jest.fn().mockResolvedValue({
+      language: 'c++',
+      version: '10.2.0',
+      stdout: '',
+      stderr: '',
+      code: 0,
+      signal: null,
+      engineStatus: null,
+    });
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    await uc.execute({
+      language: 'c++',
+      mode: 'run',
+      files: [{ content: 'int main(){return 0;}' }],
+    });
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: 'c++',
+        files: [{ name: 'main.cpp', content: 'int main(){return 0;}' }],
+      }),
+    );
+  });
+
 });
