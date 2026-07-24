@@ -191,6 +191,50 @@ describe('PistonClient', () => {
     });
   });
 
+  it('maps compile stage when present', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          language: 'c',
+          version: '10.2.0',
+          compile: {
+            stdout: '',
+            stderr: 'error: expected ;',
+            code: 1,
+            signal: null,
+            status: null,
+          },
+          run: {
+            stdout: '',
+            stderr: '',
+            code: null,
+            signal: null,
+            status: null,
+          },
+        }),
+    });
+
+    const client = new PistonClient();
+    const res = await client.run({
+      language: 'c',
+      version: '*',
+      files: [{ name: 'main.c', content: 'int main(){' }],
+      stdin: '',
+      runTimeoutMs: 3000,
+    });
+
+    expect(res.compile).toEqual({
+      stdout: '',
+      stderr: 'error: expected ;',
+      code: 1,
+      signal: null,
+      engineStatus: null,
+    });
+    expect(res.language).toBe('c');
+  });
+
   describe('listRuntimes', () => {
     it('GETs runtimes and maps to RunnerRuntime[]', async () => {
       global.fetch = jest.fn().mockResolvedValue({

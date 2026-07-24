@@ -37,7 +37,8 @@ export class ExecutionController {
   @Get('runtimes')
   @ApiOperation({
     summary: 'List allowlisted runtimes',
-    description: 'v1 returns JavaScript only (policy-filtered).',
+    description:
+      'Allowlisted runtimes installed on Piston (LanguageRegistry-filtered).',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid API key' })
   runtimes() {

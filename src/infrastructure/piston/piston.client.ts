@@ -118,7 +118,7 @@ export class PistonClient implements CodeRunnerPort {
 
   private mapExecuteResponse(data: PistonExecuteResponse): CodeRunOutput {
     const stage = data.run;
-    return {
+    const base: CodeRunOutput = {
       language: data.language,
       version: data.version,
       stdout: stage.stdout ?? '',
@@ -127,5 +127,17 @@ export class PistonClient implements CodeRunnerPort {
       signal: stage.signal ?? null,
       engineStatus: stage.status ?? null,
     };
+
+    if (data.compile) {
+      base.compile = {
+        stdout: data.compile.stdout ?? '',
+        stderr: data.compile.stderr ?? '',
+        code: data.compile.code ?? null,
+        signal: data.compile.signal ?? null,
+        engineStatus: data.compile.status ?? null,
+      };
+    }
+
+    return base;
   }
 }

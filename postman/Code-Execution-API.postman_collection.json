@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "Dockified Code Execution API",
+    "description": "Local test collection for Nest judge gateway + Piston.\n\nBase URL: http://127.0.0.1:3000\nAuth: Bearer {{apiKey}} (default dev-key-tutor)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:3000" },
+    { "key": "apiKey", "value": "dev-key-tutor" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "List runtimes",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" }
+        ],
+        "url": "{{baseUrl}}/v1/runtimes"
+      }
+    },
+    {
+      "name": "Execute JS (run)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"javascript\",\n  \"mode\": \"run\",\n  \"files\": [{ \"content\": \"console.log(1+2)\" }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute Python (run)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"python\",\n  \"mode\": \"run\",\n  \"files\": [{ \"content\": \"print(1+2)\" }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute C (run)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"c\",\n  \"mode\": \"run\",\n  \"files\": [{\n    \"content\": \"#include <stdio.h>\\nint main(){printf(\\\"3\\\\n\\\");return 0;}\"\n  }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute C++ (run)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"cpp\",\n  \"mode\": \"run\",\n  \"files\": [{\n    \"content\": \"#include <iostream>\\nint main(){std::cout<<3<<std::endl;return 0;}\"\n  }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute SQL / SQLite (run)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"sql\",\n  \"mode\": \"run\",\n  \"files\": [{\n    \"content\": \"CREATE TABLE t(x INT); INSERT INTO t VALUES (1); SELECT x FROM t;\"\n  }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute judge (public + hidden)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"javascript\",\n  \"files\": [{ \"content\": \"console.log(1+2)\" }],\n  \"tests\": [\n    { \"id\": \"sample\", \"expectedStdout\": \"3\", \"visibility\": \"public\" },\n    { \"id\": \"secret\", \"expectedStdout\": \"3\", \"visibility\": \"hidden\" }\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Execute C compile_error",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{apiKey}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"c\",\n  \"mode\": \"run\",\n  \"files\": [{ \"content\": \"int main(){\" }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    },
+    {
+      "name": "Unauthorized (expect 401)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"language\": \"javascript\",\n  \"mode\": \"run\",\n  \"files\": [{ \"content\": \"1\" }]\n}"
+        },
+        "url": "{{baseUrl}}/v1/execute"
+      }
+    }
+  ]
+}

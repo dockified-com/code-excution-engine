@@ -32,3 +32,9 @@ lerna-debug.log*
 .env.development
 .env.local
 .env.production
+
+# git worktrees (local isolation)
+.worktrees/
+
+# hookify local rules (machine-specific)
+.claude/hookify.*.local.md

@@ -23,13 +23,30 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Dockified **Code Execution / Judge API** — NestJS gateway in front of private [Piston](https://github.com/engineer-man/piston). Product backends (AI Tutor, Lab, LMS) call this service with API keys; students never hold keys or talk to Piston.
+
+**Documentation (start here):** [docs/README.md](./docs/README.md)
+
+- Tutorial: [docs/tutorials/getting-started.md](./docs/tutorials/getting-started.md)
+- Client how-to: [docs/howtos/integrate-product-backend.md](./docs/howtos/integrate-product-backend.md)
+- API reference: [docs/reference/execute-api.md](./docs/reference/execute-api.md)
+
+This repository is based on the NestJS TypeScript starter layout.
 
 ## Project setup
 
 ```bash
 $ npm install
+$ cp .env.example .env
 ```
+
+Full local stack (API + Piston):
+
+```bash
+$ docker compose up -d
+```
+
+Then install the JS runtime on Piston and smoke-test — see [docs/tutorials/getting-started.md](./docs/tutorials/getting-started.md).
 
 ## Compile and run the project
 

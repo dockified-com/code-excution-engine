@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { LanguagePolicy } from '../../domain/language-policy';
+import { LanguageRegistry } from '../../domain/languages';
 import { CODE_RUNNER } from '../ports/code-runner.port';
 import type { CodeRunnerPort, RunnerRuntime } from '../ports/code-runner.port';
 
@@ -7,7 +7,7 @@ import type { CodeRunnerPort, RunnerRuntime } from '../ports/code-runner.port';
 export class ListRuntimesUseCase {
   constructor(
     @Inject(CODE_RUNNER) private readonly runner: CodeRunnerPort,
-    private readonly languages: LanguagePolicy,
+    private readonly languages: LanguageRegistry,
   ) {}
 
   async execute(): Promise<RunnerRuntime[]> {

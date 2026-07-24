@@ -6,6 +6,14 @@ export interface CodeRunInput {
   runTimeoutMs: number;
 }
 
+export interface CodeRunStage {
+  stdout: string;
+  stderr: string;
+  code: number | null;
+  signal: string | null;
+  engineStatus: string | null;
+}
+
 export interface CodeRunOutput {
   language: string;
   version: string;
@@ -15,6 +23,8 @@ export interface CodeRunOutput {
   signal: string | null;
   /** Piston status TO/RE/SG/… or null */
   engineStatus: string | null;
+  /** Present when Piston returned a compile stage */
+  compile?: CodeRunStage;
 }
 
 export interface RunnerRuntime {
