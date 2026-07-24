@@ -1,9 +1,9 @@
-import { LanguagePolicy } from '../../domain/language-policy';
+import { LanguageRegistry } from '../../domain/languages';
 import type { CodeRunnerPort, RunnerRuntime } from '../ports/code-runner.port';
 import { ListRuntimesUseCase } from './list-runtimes.use-case';
 
 describe('ListRuntimesUseCase', () => {
-  it('filters runtimes to JavaScript via LanguagePolicy', async () => {
+  it('filters runtimes to allowlisted languages via LanguageRegistry', async () => {
     const all: RunnerRuntime[] = [
       {
         language: 'javascript',
@@ -28,7 +28,7 @@ describe('ListRuntimesUseCase', () => {
       listRuntimes,
     };
 
-    const uc = new ListRuntimesUseCase(runner, new LanguagePolicy());
+    const uc = new ListRuntimesUseCase(runner, new LanguageRegistry());
     const result = await uc.execute();
 
     expect(result).toEqual([
@@ -61,7 +61,7 @@ describe('ListRuntimesUseCase', () => {
       listRuntimes,
     };
 
-    const uc = new ListRuntimesUseCase(runner, new LanguagePolicy());
+    const uc = new ListRuntimesUseCase(runner, new LanguageRegistry());
     const result = await uc.execute();
 
     expect(result).toEqual([
@@ -73,18 +73,16 @@ describe('ListRuntimesUseCase', () => {
     ]);
   });
 
-  it('returns empty array when no JS runtimes', async () => {
+  it('returns empty array when no allowlisted runtimes', async () => {
     const listRuntimes = jest
       .fn()
-      .mockResolvedValue([
-        { language: 'python', version: '3', aliases: ['py'] },
-      ]);
+      .mockResolvedValue([{ language: 'ruby', version: '3', aliases: ['rb'] }]);
     const runner: CodeRunnerPort = {
       run: jest.fn(),
       listRuntimes,
     };
 
-    const uc = new ListRuntimesUseCase(runner, new LanguagePolicy());
+    const uc = new ListRuntimesUseCase(runner, new LanguageRegistry());
     await expect(uc.execute()).resolves.toEqual([]);
   });
 });

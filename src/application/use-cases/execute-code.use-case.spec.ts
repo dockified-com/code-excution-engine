@@ -3,7 +3,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { Judge } from '../../domain/judge';
-import { LanguagePolicy } from '../../domain/language-policy';
+import { LanguageRegistry } from '../../domain/languages';
 import { VisibilityFilter } from '../../domain/visibility-filter';
 import type { CodeRunnerPort } from '../ports/code-runner.port';
 import { ExecuteCodeUseCase } from './execute-code.use-case';
@@ -55,7 +55,7 @@ describe('ExecuteCodeUseCase', () => {
       runner,
       new Judge(),
       new VisibilityFilter(),
-      new LanguagePolicy(),
+      new LanguageRegistry(),
     );
   }
 
@@ -69,12 +69,118 @@ describe('ExecuteCodeUseCase', () => {
 
     await expect(
       uc.execute({
-        language: 'python',
-        files: [{ content: 'print(1)' }],
+        language: 'ruby',
+        files: [{ content: 'puts 1' }],
       }),
     ).rejects.toThrow(BadRequestException);
 
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it('error message lists supported language ids', async () => {
+    const uc = createUseCase({ run: jest.fn(), listRuntimes: jest.fn() });
+    await expect(
+      uc.execute({ language: 'ruby', files: [{ content: '1' }] }),
+    ).rejects.toThrow(/javascript/);
+  });
+
+  it('sends pistonLanguage and applies default file name', async () => {
+    const run = jest.fn().mockResolvedValue(okRun('3\n'));
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+
+    await uc.execute({
+      language: 'js',
+      mode: 'run',
+      files: [{ content: 'console.log(3)' }],
+    });
+
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: 'javascript',
+        files: [{ name: 'main.js', content: 'console.log(3)' }],
+      }),
+    );
+  });
+
+  it('rejects when two files omit name', async () => {
+    const run = jest.fn();
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+
+    await expect(
+      uc.execute({
+        language: 'javascript',
+        mode: 'run',
+        files: [{ content: 'a' }, { content: 'b' }],
+      }),
+    ).rejects.toThrow(/Multiple files missing name/);
+
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('maps compile failure to compile_error in run mode', async () => {
+    const run = jest.fn().mockResolvedValue({
+      language: 'javascript',
+      version: '18.0.0',
+      stdout: '',
+      stderr: '',
+      code: null,
+      signal: null,
+      engineStatus: null,
+      compile: {
+        stdout: '',
+        stderr: 'error: expected ;',
+        code: 1,
+        signal: null,
+        engineStatus: null,
+      },
+    });
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    const res = await uc.execute({
+      language: 'javascript',
+      mode: 'run',
+      files: [{ name: 'main.js', content: 'x' }],
+    });
+    expect(res.summary.status).toBe('compile_error');
+    expect(res.summary.success).toBe(false);
+    expect(res.run?.stderr).toContain('error: expected ;');
+  });
+
+  it('maps compile failure to compile_error in judge mode and strips hidden I/O', async () => {
+    const compileFail = {
+      language: 'javascript',
+      version: '18.0.0',
+      stdout: '',
+      stderr: '',
+      code: null,
+      signal: null,
+      engineStatus: null,
+      compile: {
+        stdout: '',
+        stderr: 'error: syntax',
+        code: 1,
+        signal: null,
+        engineStatus: null,
+      },
+    };
+    const run = jest
+      .fn()
+      .mockResolvedValueOnce(compileFail)
+      .mockResolvedValueOnce(compileFail);
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    const res = await uc.execute({
+      language: 'javascript',
+      files: [{ name: 'main.js', content: 'x' }],
+      tests: [
+        { id: 't1', expectedStdout: '0', visibility: 'public' },
+        { id: 't2', expectedStdout: '0', visibility: 'hidden' },
+      ],
+    });
+    expect(res.summary.status).toBe('compile_error');
+    expect(res.tests[0].status).toBe('compile_error');
+    expect(res.tests[0].stderr).toContain('error: syntax');
+    expect(res.tests[1].status).toBe('compile_error');
+    expect(res.tests[1].stderr).toBeUndefined();
+    expect(run).toHaveBeenCalledTimes(2);
   });
 
   it('judges public and strips hidden fields', async () => {

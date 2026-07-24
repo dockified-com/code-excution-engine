@@ -145,5 +145,47 @@ describe('Judge', () => {
       ];
       expect(judge.buildSummary(tests).status).toBe('runtime_error');
     });
+
+    it('prefers compile_error over runtime_error and wrong_answer', () => {
+      const tests: TestCaseResult[] = [
+        {
+          id: '1',
+          visibility: 'public',
+          passed: false,
+          status: 'wrong_answer',
+        },
+        {
+          id: '2',
+          visibility: 'public',
+          passed: false,
+          status: 'runtime_error',
+        },
+        {
+          id: '3',
+          visibility: 'public',
+          passed: false,
+          status: 'compile_error',
+        },
+      ];
+      expect(judge.buildSummary(tests).status).toBe('compile_error');
+    });
+
+    it('prefers timeout over compile_error', () => {
+      const tests: TestCaseResult[] = [
+        {
+          id: '1',
+          visibility: 'public',
+          passed: false,
+          status: 'compile_error',
+        },
+        {
+          id: '2',
+          visibility: 'public',
+          passed: false,
+          status: 'timeout',
+        },
+      ];
+      expect(judge.buildSummary(tests).status).toBe('timeout');
+    });
   });
 });

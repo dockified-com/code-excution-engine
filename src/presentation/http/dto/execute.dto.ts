@@ -99,7 +99,8 @@ export class ExecuteContextDto {
 export class ExecuteDto {
   @ApiProperty({
     example: 'javascript',
-    description: 'v1: javascript only (aliases js, node)',
+    description:
+      'Language id or alias. Core: javascript (js, node). Additional languages are registered via LanguageRegistry packs (python, c, cpp, sql). Unregistered ids return 400. See GET /v1/runtimes.',
   })
   @IsString()
   language!: string;

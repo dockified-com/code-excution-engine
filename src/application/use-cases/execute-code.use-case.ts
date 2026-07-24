@@ -13,7 +13,10 @@ import {
   TestVisibility,
 } from '../../domain/models/execute.models';
 import { Judge } from '../../domain/judge';
-import { LanguagePolicy } from '../../domain/language-policy';
+import {
+  LanguageRegistry,
+  type LanguageDefinition,
+} from '../../domain/languages';
 import { VisibilityFilter } from '../../domain/visibility-filter';
 import {
   getMaxFileBytes,
@@ -56,6 +59,19 @@ export interface ExecuteResult {
   run: ExecuteRunPayload | null;
 }
 
+function isCompileFailure(out: CodeRunOutput): boolean {
+  if (!out.compile) return false;
+  if (out.compile.code !== null && out.compile.code !== 0) return true;
+  const st = out.compile.engineStatus;
+  if (st && st !== 'OK' && st !== 'ok') return true;
+  return false;
+}
+
+function compileStderr(out: CodeRunOutput): string {
+  const c = out.compile!;
+  return c.stderr || c.stdout || '';
+}
+
 @Injectable()
 export class ExecuteCodeUseCase {
   private readonly logger = new Logger(ExecuteCodeUseCase.name);
@@ -64,14 +80,14 @@ export class ExecuteCodeUseCase {
     @Inject(CODE_RUNNER) private readonly runner: CodeRunnerPort,
     private readonly judge: Judge,
     private readonly visibility: VisibilityFilter,
-    private readonly languages: LanguagePolicy,
+    private readonly languages: LanguageRegistry,
   ) {}
 
   async execute(input: ExecuteCodeInput): Promise<ExecuteResult> {
-    const language = this.languages.resolve(input.language);
-    if (!language) {
+    const def = this.languages.resolve(input.language);
+    if (!def) {
       throw new BadRequestException(
-        'Language not allowed. v1 supports: javascript',
+        `Language not allowed. Supported: ${this.languages.listIds().join(', ')}`,
       );
     }
 
@@ -87,6 +103,8 @@ export class ExecuteCodeUseCase {
       }
     }
 
+    const files = this.applyDefaultFileNames(input.files, def);
+
     const mode =
       input.mode ?? (input.tests && input.tests.length > 0 ? 'judge' : 'run');
     const version = input.version ?? '*';
@@ -95,19 +113,51 @@ export class ExecuteCodeUseCase {
       getMaxRunTimeoutMs(),
     );
     const runId = randomUUID();
-    const files = input.files.map((f) => ({
-      ...(f.name !== undefined ? { name: f.name } : {}),
-      content: f.content,
-    }));
 
     if (mode === 'run') {
       const out = await this.runner.run({
-        language,
+        language: def.pistonLanguage,
         version,
         files,
         stdin: input.stdin ?? '',
         runTimeoutMs,
       });
+
+      if (isCompileFailure(out)) {
+        const stderr = compileStderr(out);
+        const summary: ExecuteSummary = {
+          passed: 0,
+          failed: 0,
+          total: 0,
+          success: false,
+          status: 'compile_error',
+        };
+
+        this.logger.log(
+          JSON.stringify({
+            runId,
+            mode: 'run',
+            language: out.language,
+            summary,
+            lessonId: input.context?.lessonId,
+            enrollmentId: input.context?.enrollmentId,
+          }),
+        );
+
+        return {
+          runId,
+          language: out.language,
+          version: out.version,
+          summary,
+          tests: [],
+          run: {
+            stdout: '',
+            stderr,
+            code: out.compile?.code ?? null,
+            signal: out.compile?.signal ?? null,
+          },
+        };
+      }
 
       const success = out.code === 0;
       const summary: ExecuteSummary = {
@@ -158,12 +208,12 @@ export class ExecuteCodeUseCase {
 
     const rawResults: TestCaseResult[] = [];
     let resolvedVersion = version;
-    let resolvedLanguage = language;
+    let resolvedLanguage = def.pistonLanguage;
 
     for (const t of tests) {
       try {
         const out = await this.runner.run({
-          language,
+          language: def.pistonLanguage,
           version,
           files,
           stdin: t.stdin ?? '',
@@ -171,6 +221,21 @@ export class ExecuteCodeUseCase {
         });
         resolvedVersion = out.version;
         resolvedLanguage = out.language;
+
+        if (isCompileFailure(out)) {
+          rawResults.push({
+            id: t.id,
+            visibility: t.visibility,
+            passed: false,
+            status: 'compile_error',
+            stdin: t.stdin ?? '',
+            expectedStdout: t.expectedStdout,
+            actualStdout: '',
+            stderr: compileStderr(out),
+            exitCode: out.compile?.code ?? null,
+          });
+          continue;
+        }
 
         const engineStatus = this.mapEngineStatus(out);
         const actual = out.stdout ?? '';
@@ -229,6 +294,31 @@ export class ExecuteCodeUseCase {
       tests: filtered,
       run: null,
     };
+  }
+
+  private applyDefaultFileNames(
+    files: { name?: string; content: string }[],
+    def: LanguageDefinition,
+  ): { name?: string; content: string }[] {
+    const missingIdx = files
+      .map((f, i) => (!f.name || !f.name.trim() ? i : -1))
+      .filter((i) => i >= 0);
+
+    if (missingIdx.length >= 2) {
+      throw new BadRequestException(
+        'Multiple files missing name; provide files[].name for multi-file projects',
+      );
+    }
+
+    return files.map((f, i) => {
+      if (missingIdx.length === 1 && missingIdx[0] === i) {
+        return { name: def.defaultFileName, content: f.content };
+      }
+      return {
+        ...(f.name !== undefined ? { name: f.name } : {}),
+        content: f.content,
+      };
+    });
   }
 
   private mapEngineStatus(output: CodeRunOutput): CaseStatus {

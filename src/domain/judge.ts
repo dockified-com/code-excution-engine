@@ -31,6 +31,8 @@ export class Judge {
         status = 'internal_error';
       } else if (failedStatuses.includes('timeout')) {
         status = 'timeout';
+      } else if (failedStatuses.includes('compile_error')) {
+        status = 'compile_error';
       } else if (failedStatuses.includes('runtime_error')) {
         status = 'runtime_error';
       } else {

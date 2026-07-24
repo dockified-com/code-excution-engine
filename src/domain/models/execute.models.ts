@@ -1,7 +1,12 @@
 export type TestVisibility = 'public' | 'hidden';
 
 export type CaseStatus =
-  'ok' | 'wrong_answer' | 'runtime_error' | 'timeout' | 'internal_error';
+  | 'ok'
+  | 'wrong_answer'
+  | 'runtime_error'
+  | 'timeout'
+  | 'compile_error'
+  | 'internal_error';
 
 export interface TestCaseResult {
   id: string;
