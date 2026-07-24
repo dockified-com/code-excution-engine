@@ -35,3 +35,6 @@ lerna-debug.log*
 
 # git worktrees (local isolation)
 .worktrees/
+
+# hookify local rules (machine-specific)
+.claude/hookify.*.local.md
