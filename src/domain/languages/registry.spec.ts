@@ -45,4 +45,14 @@ describe('LanguageRegistry', () => {
       expect(registry.listIds()).toContain('javascript');
     });
   });
+
+  describe('sql pack', () => {
+    it('resolves sql to sqlite3 piston language', () => {
+      expect(registry.resolve('sql')?.pistonLanguage).toBe('sqlite3');
+      expect(registry.resolve('sqlite3')?.id).toBe('sql');
+      expect(registry.resolve('sqlite')?.defaultFileName).toBe('main.sql');
+      expect(registry.resolve('sql')?.hasCompileStage).toBe(false);
+    });
+  });
+
 });

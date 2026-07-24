@@ -433,4 +433,38 @@ describe('ExecuteCodeUseCase', () => {
       expect.objectContaining({ runTimeoutMs: 2000 }),
     );
   });
+
+  it('runs sql via sqlite3', async () => {
+    const run = jest.fn().mockResolvedValue({
+      language: 'sqlite3',
+      version: '3.x',
+      stdout: '1\n',
+      stderr: '',
+      code: 0,
+      signal: null,
+      engineStatus: null,
+    });
+    const uc = createUseCase({ run, listRuntimes: jest.fn() });
+    await uc.execute({
+      language: 'sql',
+      mode: 'run',
+      files: [
+        {
+          content:
+            'CREATE TABLE t(x INT); INSERT INTO t VALUES (1); SELECT x FROM t;',
+        },
+      ],
+    });
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        language: 'sqlite3',
+        files: [
+          expect.objectContaining({
+            name: 'main.sql',
+          }),
+        ],
+      }),
+    );
+  });
+
 });
