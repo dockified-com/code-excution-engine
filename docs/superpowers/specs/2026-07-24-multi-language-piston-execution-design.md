@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** 2026-07-24  
-**Status:** Approved for implementation planning  
+**Status:** Approved — implementation plan ready  
 **Owner:** Dockified / Yeakkhai  
 **Repo context:** NestJS Code Execution / Judge API (platform service)  
 **Extends:** [2026-07-19-piston-code-execution-design.md](./2026-07-19-piston-code-execution-design.md) (v1 JavaScript-only)
