@@ -16,7 +16,6 @@ describe('LanguageRegistry', () => {
     });
 
     it('returns null for unknown languages', () => {
-      // Language packs append definitions later; unregistered ids stay null.
       expect(registry.resolve('ruby')).toBeNull();
       expect(registry.resolve('')).toBeNull();
     });
@@ -41,8 +40,11 @@ describe('LanguageRegistry', () => {
   });
 
   describe('listIds', () => {
-    it('includes javascript', () => {
-      expect(registry.listIds()).toContain('javascript');
+    it('includes all registered languages', () => {
+      const ids = registry.listIds();
+      expect(ids).toEqual(
+        expect.arrayContaining(['javascript', 'python', 'c', 'cpp', 'sql']),
+      );
     });
   });
 
@@ -55,4 +57,24 @@ describe('LanguageRegistry', () => {
     });
   });
 
+  describe('c-cpp pack', () => {
+    it('resolves c and cpp', () => {
+      expect(registry.resolve('c')?.pistonLanguage).toBe('c');
+      expect(registry.resolve('c')?.defaultFileName).toBe('main.c');
+      expect(registry.resolve('c')?.hasCompileStage).toBe(true);
+      expect(registry.resolve('c++')?.id).toBe('cpp');
+      expect(registry.resolve('cxx')?.defaultFileName).toBe('main.cpp');
+      expect(registry.resolve('cpp')?.pistonLanguage).toBe('c++');
+      expect(registry.resolve('cpp')?.hasCompileStage).toBe(true);
+    });
+  });
+
+  describe('sql pack', () => {
+    it('resolves sql to sqlite3 piston language', () => {
+      expect(registry.resolve('sql')?.pistonLanguage).toBe('sqlite3');
+      expect(registry.resolve('sqlite3')?.id).toBe('sql');
+      expect(registry.resolve('sqlite')?.defaultFileName).toBe('main.sql');
+      expect(registry.resolve('sql')?.hasCompileStage).toBe(false);
+    });
+  });
 });
