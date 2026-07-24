@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import {
@@ -192,7 +193,11 @@ export class ExecuteCodeUseCase {
           stderr: out.stderr ?? '',
           exitCode: out.code,
         });
-      } catch {
+      } catch (err) {
+        // Fail closed: Piston down / overloaded must surface as 503, not a graded 200.
+        if (err instanceof ServiceUnavailableException) {
+          throw err;
+        }
         rawResults.push({
           id: t.id,
           visibility: t.visibility,

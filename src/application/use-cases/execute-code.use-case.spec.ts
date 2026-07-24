@@ -1,4 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Judge } from '../../domain/judge';
 import { LanguagePolicy } from '../../domain/language-policy';
 import { VisibilityFilter } from '../../domain/visibility-filter';
@@ -223,8 +226,8 @@ describe('ExecuteCodeUseCase', () => {
     expect(res.summary.status).toBe('timeout');
   });
 
-  it('records internal_error when runner throws for a test', async () => {
-    const run = jest.fn().mockRejectedValue(new Error('Piston down'));
+  it('records internal_error when runner throws an unexpected error for a test', async () => {
+    const run = jest.fn().mockRejectedValue(new Error('unexpected mapper bug'));
     const runner: CodeRunnerPort = {
       run,
       listRuntimes: jest.fn(),
@@ -243,6 +246,30 @@ describe('ExecuteCodeUseCase', () => {
       status: 'internal_error',
     });
     expect(res.summary.status).toBe('internal_error');
+  });
+
+  it('propagates ServiceUnavailableException in judge mode (fail closed)', async () => {
+    const run = jest
+      .fn()
+      .mockRejectedValue(new ServiceUnavailableException('Piston unreachable'));
+    const runner: CodeRunnerPort = {
+      run,
+      listRuntimes: jest.fn(),
+    };
+    const uc = createUseCase(runner);
+
+    await expect(
+      uc.execute({
+        language: 'javascript',
+        files: [{ content: 'x' }],
+        tests: [
+          { id: 't1', expectedStdout: '1', visibility: 'public' },
+          { id: 't2', expectedStdout: '2', visibility: 'hidden' },
+        ],
+      }),
+    ).rejects.toThrow(ServiceUnavailableException);
+
+    expect(run).toHaveBeenCalledTimes(1);
   });
 
   it('rejects too many files', async () => {
